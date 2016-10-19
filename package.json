@@ -1,0 +1,47 @@
+{
+  "name": "hawkular-apm-opentracing",
+  "version": "0.0.1",
+  "description": "Hawkular APM OpenTracing implementation",
+  "keywords": [
+    "opentracing",
+    "distributed tracing",
+    "tracing",
+    "hawkular",
+    "application performance"
+  ],
+  "author": "Pavol Loffay",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/hawkular/hawkular-apm",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hawkular/hawkular.git"
+  },
+  "bugs": {
+    "url": "https://issues.jboss.org/projects/HWKAPM/issues"
+  },
+  "scripts": {
+    "lint": "eslint lib/*.js test/*.js index.js",
+    "test": "tape test/unit/*.js | tap-spec",
+    "integration": "tape test/integration/*.js | tap-spec",
+    "prepublish": "nsp check",
+    "coverage": "istanbul cover tape test/integration/*.js tape test/unit/*.js"
+  },
+  "devDependencies": {
+    "eslint": "^3.3.1",
+    "eslint-config-standard": "^6.0.0",
+    "eslint-plugin-import": "^1.16.0",
+    "eslint-plugin-jsx-a11y": "^2.2.3",
+    "eslint-config-airbnb": "^12.0.0",
+    "eslint-plugin-promise": "^2.0.1",
+    "eslint-plugin-react": "^6.1.2",
+    "istanbul": "1.0.0-alpha.2",
+    "nsp": "^2.6.1",
+    "opentracing": "^0.13.0",
+    "tap-spec": "^4.1.1",
+    "tape": "^4.5.1"
+  },
+  "dependencies": {
+    "roi": "^0.12.1"
+  }
+}
