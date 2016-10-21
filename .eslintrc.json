@@ -1,6 +1,13 @@
 {
-  "extends": "eslint-config-airbnb",
-  "rules": {
-    "indent": ["error", 4]
-  }
+    "parser": "babel-eslint",
+    "plugins": [
+        "babel"
+    ],
+    "extends": "eslint-config-airbnb",
+    "rules": {
+       "indent": ["error", 4],
+       "no-underscore-dangle": [0],
+       "no-param-reassign": [0],
+       "class-methods-use-this": [0]
+   }
 }

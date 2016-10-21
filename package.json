@@ -4,7 +4,7 @@
   "description": "Hawkular APM OpenTracing implementation",
   "license": "Apache-2.0",
   "author": "Pavol Loffay <ploffay@redhat.com>",
-  "homepage": "https://github.com/hawkular/hawkular-apm",
+  "homepage": "https://github.com/hawkular/hawkular-apm-opentracing-javascript",
   "keywords": [
     "opentracing",
     "distributed tracing",
@@ -14,34 +14,54 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hawkular/hawkular.git"
+    "url": "git+https://github.com/hawkular/hawkular-apm-opentracing-javascript.git"
+  },
+  "babel": {
+    "presets": [
+      "es2015"
+    ]
   },
   "bugs": {
     "url": "https://issues.jboss.org/projects/HWKAPM/issues"
   },
   "main": "index.js",
+  "files": [
+    "package.json",
+    "README.md",
+    "LICENSE",
+    "index.js",
+    "lib",
+    "examples"
+  ],
   "scripts": {
     "lint": "eslint lib/*.js test/*.js index.js",
-    "test": "tape test/unit/*.js | tap-spec",
-    "integration": "tape test/integration/*.js | tap-spec",
+    "test": "babel-tape-runner test/unit/*.js | tap-spec",
     "prepublish": "nsp check",
-    "coverage": "istanbul cover tape test/integration/*.js tape test/unit/*.js"
+    "coverage": "istanbul cover babel-tape-runner test/integration/*.js tape test/unit/*.js"
   },
   "devDependencies": {
+    "babel-cli": "^6.18.0",
+    "babel-core": "^6.18.0",
+    "babel-eslint": "^7.0.0",
+    "babel-preset-es2015": "^6.18.0",
+    "babel-runtime": "^6.11.6",
+    "babel-tape-runner": "^2.0.0",
     "eslint": "^3.3.1",
+    "eslint-config-airbnb": "^12.0.0",
     "eslint-config-standard": "^6.0.0",
+    "eslint-plugin-babel": "^3.3.0",
     "eslint-plugin-import": "^1.16.0",
     "eslint-plugin-jsx-a11y": "^2.2.3",
-    "eslint-config-airbnb": "^12.0.0",
-    "eslint-plugin-promise": "^2.0.1",
     "eslint-plugin-react": "^6.1.2",
     "istanbul": "1.0.0-alpha.2",
     "nsp": "^2.6.1",
-    "opentracing": "^0.13.0",
     "tap-spec": "^4.1.1",
     "tape": "^4.5.1"
   },
   "dependencies": {
-    "roi": "^0.12.1"
+    "roi": "^0.12.1",
+    "opentracing": "^0.13.0",
+    "node-uuid": "^1.4.7",
+    "long": "^3.2.0"
   }
 }
