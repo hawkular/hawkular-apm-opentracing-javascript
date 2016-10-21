@@ -2,6 +2,9 @@
   "name": "hawkular-apm-opentracing",
   "version": "0.0.1",
   "description": "Hawkular APM OpenTracing implementation",
+  "license": "Apache-2.0",
+  "author": "Pavol Loffay <ploffay@redhat.com>",
+  "homepage": "https://github.com/hawkular/hawkular-apm",
   "keywords": [
     "opentracing",
     "distributed tracing",
@@ -9,10 +12,6 @@
     "hawkular",
     "application performance"
   ],
-  "author": "Pavol Loffay",
-  "license": "Apache-2.0",
-  "homepage": "https://github.com/hawkular/hawkular-apm",
-  "main": "index.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/hawkular/hawkular.git"
@@ -20,6 +19,7 @@
   "bugs": {
     "url": "https://issues.jboss.org/projects/HWKAPM/issues"
   },
+  "main": "index.js",
   "scripts": {
     "lint": "eslint lib/*.js test/*.js index.js",
     "test": "tape test/unit/*.js | tap-spec",
