@@ -65,7 +65,7 @@ test('test two spans, nodes', (t) => {
     const tracer = new APMTracer();
     const rootSpan = tracer.startSpan('Name');
     tracer.startSpan('Name', { childOf: rootSpan });
-    t.true(rootSpan.context().getTrace().findNode(rootSpan.getId())._nodes.length, 2);
+    t.true(rootSpan.context().getTrace().findNode(rootSpan.getId()).getNodes().length, 2);
     t.end();
 });
 
@@ -270,7 +270,6 @@ test('test trace add and find node', (t) => {
     t.deepEquals(trace.findNode(childSpan1.getId()).getSpan(), childSpan1);
     t.deepEquals(trace.findNode(childSpan2.getId()).getSpan(), childSpan2);
 
-    t.equals(trace._nodes.length, 1);
     t.deepEquals(trace.findNode(rootSpan.getId()).getNodes().length, 2);
     t.end();
 });
