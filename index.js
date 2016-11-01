@@ -17,11 +17,12 @@
 
 import { APMTracer } from './lib/APMTracer';
 import { AlwaysSampledSampler } from './lib/sampler';
-import { NoOpRecorder, ConsoleRecorder } from './lib/recorder';
+import { NoOpRecorder, ConsoleRecorder, HttpRecorder } from './lib/recorder';
 
 module.exports = {
     APMTracer,
     NoOpRecorder,
     ConsoleRecorder,
+    HttpRecorder,
     AlwaysSampledSampler,
 };
