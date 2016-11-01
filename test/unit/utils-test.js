@@ -15,13 +15,11 @@
  * limitations under the License.
  */
 
-import { APMTracer } from './lib/APMTracer';
-import { AlwaysSampledSampler } from './lib/sampler';
-import { NoOpRecorder, ConsoleRecorder } from './lib/recorder';
+import test from 'tape';
 
-module.exports = {
-    APMTracer,
-    NoOpRecorder,
-    ConsoleRecorder,
-    AlwaysSampledSampler,
-};
+import utils from '../../lib/utils';
+
+test('Test current time milliseconds', (t) => {
+    t.equal(utils.nowMillis(), new Date().getTime());
+    t.end();
+});

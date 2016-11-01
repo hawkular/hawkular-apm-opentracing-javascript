@@ -13,6 +13,22 @@ is intended to be used with [Hawkular-APM](https://github.com/hawkular/hawkular-
 $ npm install --save hawkular-apm-opentracing
 ```
 
+# Usage 
+```javascript
+const opentracing = require('opentracing');
+const hawkularAPM = require('hawkular-apm-opentracing');
+
+const tracer = new hawkularAPM.APMTracer({
+    recorder: new hawkularAPM.ConsoleRecorder(),
+    sampler: new hawkularAPM.AlwaysSampledSampler()
+});
+
+opentracing.initGlobalTracer(tracer);
+
+const span = opentracing.globalTracer().startSpan('name');
+span.finish();
+```
+
 # Develop
 ```shell
 $ make test
