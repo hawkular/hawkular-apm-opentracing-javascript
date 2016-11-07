@@ -1,6 +1,3 @@
-integration: lint
-	npm run integration
-
 test: lint
 	npm run test
 	npm run coverage

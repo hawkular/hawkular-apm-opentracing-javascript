@@ -88,7 +88,6 @@ dispatcher.onGet('/a', function(req, res) {
             res.end('a operation');
         });
     });
-
 });
 
 // /b handler
