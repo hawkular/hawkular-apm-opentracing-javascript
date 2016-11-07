@@ -26,71 +26,112 @@ const hawkularAPM = require('../index');
 const SERVER_PORT = 9000;
 
 opentracing.initGlobalTracer(new hawkularAPM.APMTracer({
-    recorder: new hawkularAPM.ConsoleRecorder(),
+    recorder: new hawkularAPM.HttpRecorder('http://localhost:8080', 'jdoe', 'password'),
+    // recorder: new hawkularAPM.ConsoleRecorder(),
     sampler: new hawkularAPM.AlwaysSampledSampler(),
 }));
 
 // /hello handler
 dispatcher.onGet('/hello', function(req, res) {
     const serverSpan = opentracing.globalTracer().startSpan('hello', {
+        childOf: extractSpanContext(opentracing.globalTracer(), req.headers),
         tags: {
+            'http.method': 'GET',
             'http.url': extractUrl(req),
-            'http.status_code': 200,
         }
     });
+    serverSpan.log({
+        foo: 'bar',
+    });
+
     res.writeHead(200);
     res.end('Hello from Node.js!');
+    serverSpan.setTag('http.status_code', 200);
     serverSpan.finish();
 });
 
 // /a handler
-dispatcher.onGet("/a", function(req, res) {
+dispatcher.onGet('/a', function(req, res) {
+    function getRequest(parentSpan, path, callback) {
+        const clientSpan = opentracing.globalTracer().startSpan(path, {
+            childOf: parentSpan,
+            tags: {
+                'http.method': 'GET',
+                'http.url': 'http://localhost:' + SERVER_PORT + path,
+            }
+        });
+        http.get({
+            host: 'localhost',
+            port: SERVER_PORT,
+            path: path,
+            headers: createCarrier(opentracing.globalTracer(), clientSpan),
+        }, function (response) {
+            clientSpan.setTag('http.status_code', response.statusCode);
+            clientSpan.finish();
+            callback(response);
+        });
+    }
+
     const serverSpan = opentracing.globalTracer().startSpan('/a', {
+        childOf: extractSpanContext(opentracing.globalTracer(), req.headers),
         tags: {
+            'http.method': 'GET',
             'http.url': extractUrl(req),
-            'http.status_code': 200,
         }
     });
 
-    const clientSpan = opentracing.globalTracer().startSpan('/b', {
-        childOf: serverSpan,
-        tags: {
-            'http.url': extractUrl(req),
-            'http.status_code': 200,
-        }
-    });
-    http.get({
-        host: 'localhost',
-        port: SERVER_PORT,
-        path: '/b',
-        headers: createCarrier(opentracing.globalTracer(), clientSpan),
-    }, function (response) {
-        clientSpan.finish();
+    getRequest(serverSpan, '/b', function (response) {
+        getRequest(serverSpan, '/c', function (response) {
+            serverSpan.setTag('http.status_code', 200);
+            serverSpan.finish();
+            res.writeHead(200);
+            res.end('a operation');
+        });
     });
 
-    res.writeHead(200);
-    res.end('/a');
-    serverSpan.finish();
 });
 
 // /b handler
 dispatcher.onGet('/b', function(req, res) {
-    const spanContext = extractSpanContext(opentracing.globalTracer(), req.headers);
     const serverSpan = opentracing.globalTracer().startSpan('/b', {
-        childOf: spanContext,
+        childOf: extractSpanContext(opentracing.globalTracer(), req.headers),
         tags: {
+            'http.method': 'GET',
             'http.url': extractUrl(req),
-            'http.status_code': 200,
         }
     });
-    res.writeHead(200);
-    res.end('Hello from Node.js!');
+    serverSpan.setTag('http.status_code', 200);
     serverSpan.finish();
+    res.writeHead(200);
+    res.end('b operation');
+});
+
+// /c handler
+dispatcher.onGet('/c', function(req, res) {
+const serverSpan = opentracing.globalTracer().startSpan('/c', {
+        childOf: extractSpanContext(opentracing.globalTracer(), req.headers),
+        tags: {
+            'http.method': 'GET',
+            'http.url': extractUrl(req),
+        }
+    });
+    serverSpan.setTag('http.status_code', 200);
+    serverSpan.finish();
+    res.writeHead(200);
+    res.end('c operation');
+});
+
+// create server
+http.createServer(function(req, res) {
+    console.log('<---' + req.url);
+    dispatcher.dispatch(req, res);
+}).listen(SERVER_PORT, function() {
+    console.log('Server listening on: http://localhost:%s', SERVER_PORT);
 });
 
 function createCarrier(tracer, span) {
     const carrier = {};
-    tracer.inject(span, opentracing.FORMAT_TEXT_MAP, carrier);
+    tracer.inject(span.context(), opentracing.FORMAT_TEXT_MAP, carrier);
     return carrier;
 }
 
@@ -101,21 +142,3 @@ function extractSpanContext(tracer, httpHeaders) {
 function extractUrl(request) {
     return 'http://' + request.headers.host + request.url;
 }
-
-//We need a function which handles requests and send response
-function handleRequest(request, response) {
-    try {
-        //log the request on console
-        console.log(request.url);
-        dispatcher.dispatch(request, response);
-    } catch(err) {
-        console.log(err);
-    }
-}
-
-// create server
-const server = http.createServer(handleRequest);
-server.listen(SERVER_PORT, function() {
-    //Callback triggered when server is successfully listening. Hurray!
-    console.log('Server listening on: http://localhost:%s', SERVER_PORT);
-});

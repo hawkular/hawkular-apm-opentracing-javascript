@@ -59,7 +59,7 @@
     "tape": "^4.5.1"
   },
   "dependencies": {
-    "roi": "^0.12.1",
+    "roi": "^0.14.0",
     "opentracing": "^0.13.0",
     "node-uuid": "^1.4.7",
     "long": "^3.2.0"
