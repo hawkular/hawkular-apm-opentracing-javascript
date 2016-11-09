@@ -4,13 +4,13 @@ Example application demonstrating usage of OpenTracing API with Hawkular-APM imp
 
 ![Architecture](architecture.png "Architecture")
 
-## Standalone Run & Build
+## Build & Run
 ```shell
 $ npm install
 $ npm start
 ```
 
-# Example Requests
+## Example Requests
 ```shell
 $ curl -ivX GET 'http://localhost:9000/hello'
 $ curl -ivX GET 'http://localhost:9000/a'

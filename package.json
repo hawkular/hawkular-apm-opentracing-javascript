@@ -41,6 +41,7 @@
     "babel-cli": "^6.18.0",
     "babel-core": "^6.18.0",
     "babel-eslint": "^7.0.0",
+    "babel-loader": "^6.2.7",
     "babel-preset-es2015": "^6.18.0",
     "babel-runtime": "^6.11.6",
     "babel-tape-runner": "^2.0.0",
@@ -52,14 +53,14 @@
     "eslint-plugin-jsx-a11y": "^2.2.3",
     "eslint-plugin-react": "^6.1.2",
     "istanbul": "1.0.0-alpha.2",
+    "json-loader": "^0.5.4",
     "nsp": "^2.6.1",
     "tap-spec": "^4.1.1",
     "tape": "^4.5.1"
   },
   "dependencies": {
-    "roi": "^0.14.0",
     "opentracing": "^0.13.0",
     "node-uuid": "^1.4.7",
-    "long": "^3.2.0"
+    "node-fetch": "^1.6.3"
   }
 }

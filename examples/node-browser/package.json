@@ -1,0 +1,26 @@
+{
+  "name": "hawkular-apm-opentracing-node-browser-example",
+  "version": "0.0.1",
+  "description": "Hawkular APM OpenTracing example with Node.js and browser",
+  "license": "Apache-2.0",
+  "author": "Pavol Loffay <ploffay@redhat.com>",
+  "main": "index.js",
+  "scripts": {
+    "webpack": "npm --prefix ../../ install && webpack --display-error-details",
+    "start": "babel-node ./server.js"
+  },
+  "engines": {
+    "node": ">= 4.0.0"
+  },
+  "dependencies": {
+    "express": "^4.14.0",
+    "opentracing": "^0.13.0",
+    "babel-cli": "^6.18.0",
+    "babel-core": "^6.3.26",
+    "babel-loader": "^6.2.0",
+    "babel-preset-es2015": "^6.13.2",
+    "json-loader": "^0.5.4",
+    "source-map-support": "^0.3.3",
+    "webpack": "^1.12.9"
+  }
+}
