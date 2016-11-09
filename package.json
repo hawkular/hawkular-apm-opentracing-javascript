@@ -39,6 +39,9 @@
     "prepublish": "nsp check",
     "coverage": "istanbul cover babel-tape-runner test/integration/*.js tape test/unit/*.js"
   },
+  "engines": {
+    "node": ">= 4.0.0"
+  },
   "devDependencies": {
     "babel-cli": "^6.18.0",
     "babel-core": "^6.18.0",
