@@ -16,28 +16,23 @@
     "type": "git",
     "url": "git+https://github.com/hawkular/hawkular-apm-opentracing-javascript.git"
   },
-  "babel": {
-    "presets": [
-      "es2015"
-    ]
-  },
   "bugs": {
     "url": "https://issues.jboss.org/projects/HWKAPM/issues"
   },
-  "main": "index.js",
+  "main": "dist/index.js",
   "files": [
     "package.json",
     "README.md",
     "LICENSE",
-    "index.js",
-    "lib",
-    "examples"
+    "dist",
+    "lib"
   ],
   "scripts": {
     "lint": "eslint lib/*.js test/*.js index.js",
     "test": "babel-tape-runner test/unit/*.js | tap-spec",
-    "prepublish": "nsp check",
-    "coverage": "istanbul cover babel-tape-runner test/integration/*.js tape test/unit/*.js"
+    "coverage": "istanbul cover babel-tape-runner test/**/*.js",
+    "compile": "babel index.js -d dist | babel lib -d dist/lib",
+    "prepublish": "npm run compile && nsp check"
   },
   "devDependencies": {
     "babel-cli": "^6.18.0",

@@ -4,26 +4,6 @@
   "description": "Hawkular APM OpenTracing example",
   "license": "Apache-2.0",
   "author": "Pavol Loffay <ploffay@redhat.com>",
-  "homepage": "https://github.com/hawkular/hawkular-apm-opentracing-javascript",
-  "keywords": [
-    "opentracing",
-    "distributed tracing",
-    "tracing",
-    "hawkular",
-    "application performance"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/hawkular/hawkular-apm-opentracing-javascript.git"
-  },
-  "babel": {
-    "presets": [
-      "es2015"
-    ]
-  },
-  "bugs": {
-    "url": "https://issues.jboss.org/projects/HWKAPM/issues"
-  },
   "main": "index.js",
   "scripts": {
     "start": "babel-node ./index.js"
