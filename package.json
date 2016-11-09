@@ -34,6 +34,9 @@
     "compile": "babel index.js -d dist | babel lib -d dist/lib",
     "prepublish": "npm run compile && nsp check"
   },
+  "engines": {
+    "node": ">= 4.0.0"
+  },
   "devDependencies": {
     "babel-cli": "^6.18.0",
     "babel-core": "^6.18.0",
