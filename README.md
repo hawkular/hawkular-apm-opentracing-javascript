@@ -32,5 +32,6 @@ span.finish();
 # Develop
 ```shell
 $ make test
+$ make publish VERSION=(patch|minor|major)
 ```
 
