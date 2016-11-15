@@ -19,7 +19,7 @@ publish: test
 	npm version $(VERSION)
 	npm whoami
 	npm publish
-	@echo 'Please do git `push --follow-tags` manually!'
+	@echo 'Please do `git push --follow-tags` manually!'
 
 clean:
 	rm -rf node_modules
