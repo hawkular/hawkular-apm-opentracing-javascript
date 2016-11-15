@@ -4,7 +4,7 @@
 [![Jira Issues](https://img.shields.io/badge/Jira-issues-blue.svg)](https://issues.jboss.org/projects/HWKAPM/issues)
 [![Join the chat at freenode:hawkular](https://img.shields.io/badge/irc-freenode%3A%20%23hawkular-blue.svg)](http://webchat.freenode.net/?channels=%23hawkular)
 
-[![NPM](https://nodei.co/npm/hawkular-apm-opentracing.png)](https://nodei.co/npm/hawkular-apm-opentracing.png)
+[![NPM](https://nodei.co/npm/hawkular-apm-opentracing.png)](https://www.npmjs.com/package/hawkular-apm-opentracing)
 
 This library is JavaScript implementation of OpenTracing API. It 
 is intended to be used with [Hawkular-APM](https://github.com/hawkular/hawkular-apm) server.
