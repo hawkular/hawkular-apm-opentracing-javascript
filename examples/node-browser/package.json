@@ -6,7 +6,8 @@
   "author": "Pavol Loffay <ploffay@redhat.com>",
   "main": "index.js",
   "scripts": {
-    "webpack": "npm --prefix ../../ install && webpack --display-error-details",
+    "install": "npm --prefix ../../ install",
+    "webpack": "webpack --display-error-details",
     "start": "babel-node ./server.js"
   },
   "engines": {
