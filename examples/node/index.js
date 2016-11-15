@@ -18,10 +18,11 @@
 'use strict';
 
 const http = require('http');
-const dispatcher = require('httpdispatcher');
+const HttpDispatcher = require('httpdispatcher');
+const dispatcher  = new HttpDispatcher();
 
 const opentracing = require('opentracing');
-const hawkularAPM = require('../index');
+const hawkularAPM = require('../../index');
 
 const SERVER_PORT = 9000;
 

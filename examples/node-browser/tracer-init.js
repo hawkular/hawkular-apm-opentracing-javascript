@@ -15,18 +15,19 @@
  * limitations under the License.
  */
 
-import uuid from 'node-uuid';
+'use strict';
 
-function nowMillis() {
-    return new Date().getTime();
-}
+import opentracing from 'opentracing';
+import hawkularAPM from '../../index';
 
-function generateSpanId() {
-    const buffer = uuid.v4();
-    return buffer.toString();
+function init() {
+    opentracing.initGlobalTracer(new hawkularAPM.APMTracer({
+        recorder: new hawkularAPM.HttpRecorder('http://localhost:8080', 'jdoe', 'password'),
+        // recorder: new hawkularAPM.ConsoleRecorder(),
+        sampler: new hawkularAPM.AlwaysSampledSampler(),
+    }));
 }
 
 module.exports = {
-    nowMillis,
-    generateSpanId,
+    init
 };
