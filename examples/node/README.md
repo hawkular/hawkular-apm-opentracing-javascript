@@ -1,4 +1,4 @@
-# Node.js Example App with Hawkular-APM OpenTracing Implementation
+# Node.js Example App with Hawkular-APM OpenTracing
 
 Example application demonstrating usage of OpenTracing API with Hawkular-APM implementation. 
 

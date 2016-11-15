@@ -1,6 +1,6 @@
-# Browser and Node.js Example App with Hawkular-APM OpenTracing Implementation
+# Browser and Node.js Example App with Hawkular-APM OpenTracing
 
-Example application demonstrating usage of OpenTracing API with Hawkular-APM implementation. 
+Example application demonstrating tracing requests from a web browser to Node.js app.
 
 ## Build & Run
 ```shell
