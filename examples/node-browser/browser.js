@@ -44,10 +44,10 @@ function getData() {
             body += chunk;
         });
         response.on('end', function() {
+            clientSpan.setTag('http.status_code', response.statusCode);
+            clientSpan.finish();
             window.document.getElementById("data").innerHTML = `Server response: ${body}`;
         });
-        clientSpan.setTag('http.status_code', response.statusCode);
-        clientSpan.finish();
     });
 }
 
