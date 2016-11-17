@@ -1,7 +1,7 @@
-# Hawkular OpenTracing JavaScript Implementation
+# Hawkular-APM OpenTracing JavaScript Implementation
 
 [![Travis](https://travis-ci.org/hawkular/hawkular-apm-opentracing-javascript.svg?branch=master)](https://travis-ci.org/hawkular/hawkular-apm-opentracing-javascript)
-[![Jira Issues](https://img.shields.io/badge/Jira-issues-blue.svg)](https://issues.jboss.org/projects/HWKAPM/issues)
+[![Jira Issues](https://img.shields.io/badge/Jira-issues-blue.svg)](https://issues.jboss.org/issues/?jql=project+%3D+HWKAPM+AND+component+%3D+%22OpenTracing+%28Javascript%29%22)
 [![Join the chat at freenode:hawkular](https://img.shields.io/badge/irc-freenode%3A%20%23hawkular-blue.svg)](http://webchat.freenode.net/?channels=%23hawkular)
 
 [![NPM](https://nodei.co/npm/hawkular-apm-opentracing.png)](https://www.npmjs.com/package/hawkular-apm-opentracing)
