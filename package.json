@@ -64,8 +64,8 @@
     "underscore": "^1.8.3"
   },
   "dependencies": {
+    "node-fetch": "^1.6.3",
     "opentracing": "^0.13.0",
-    "node-uuid": "^1.4.7",
-    "node-fetch": "^1.6.3"
+    "uuid": "^3.0.0"
   }
 }
