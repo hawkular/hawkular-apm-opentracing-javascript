@@ -15,16 +15,17 @@
  * limitations under the License.
  */
 
-
 import test from 'tape';
 import Constants from 'opentracing';
-import { Trace } from '../../lib/Trace';
-import { APMTracer, CARRIER_CORRELATION_ID } from '../../lib/APMTracer';
+import { Trace } from '../../lib/Trace'; // TODO remove
+import { NODE_TYPE_CONSUMER, NODE_TYPE_PRODUCER, NODE_TYPE_COMPONENT, CORR_ID_SCOPE_INTERACTION,
+    CORR_ID_SCOPE_CAUSED_BY  } from '../../lib/constants';
+import { APMTracer, CARRIER_CORRELATION_ID, CARRIER_TRACE_ID } from '../../lib/APMTracer';
 
 test('test one span Component', (t) => {
     const tracer = new APMTracer();
     const rootSpan = tracer.startSpan('Name');
-    t.deepEqual(rootSpan.context().getTrace().findNode(rootSpan.getId()).getType(), 'Component');
+    t.deepEqual(rootSpan.context().getTrace().findNode(rootSpan.getId()).getType(), NODE_TYPE_COMPONENT);
     t.end();
 });
 
@@ -32,31 +33,31 @@ test('test one span Consumer', (t) => {
     const tracer = new APMTracer();
     const context = tracer.extract(Constants.FORMAT_TEXT_MAP, {});
     const rootSpan = tracer.startSpan('Name', { childOf: context });
-    t.deepEqual(rootSpan.context().getTrace().findNode(rootSpan.getId()).getType(), 'Consumer');
+    t.deepEqual(rootSpan.context().getTrace().findNode(rootSpan.getId()).getType(), NODE_TYPE_CONSUMER);
     t.end();
 });
 
 test('test one span Producer', (t) => {
     const tracer = new APMTracer();
     const rootSpan = tracer.startSpan('Name');
-    t.deepEqual(rootSpan.context().getTrace().findNode(rootSpan.getId()).getType(), 'Component');
+    t.deepEqual(rootSpan.context().getTrace().findNode(rootSpan.getId()).getType(), NODE_TYPE_COMPONENT);
 
     tracer.inject(rootSpan.context(), Constants.FORMAT_TEXT_MAP, {});
-    t.deepEqual(rootSpan.context().getTrace().findNode(rootSpan.getId()).getType(), 'Producer');
+    t.deepEqual(rootSpan.context().getTrace().findNode(rootSpan.getId()).getType(), NODE_TYPE_PRODUCER);
     t.end();
 });
 
 test('test isRoot', (t) => {
     const tracer = new APMTracer();
     const rootSpan = tracer.startSpan('Name');
-    t.deepEqual(rootSpan.context().getTrace().findNode(rootSpan.getId()).getType(), 'Component');
+    t.deepEqual(rootSpan.context().getTrace().findNode(rootSpan.getId()).getType(), NODE_TYPE_COMPONENT);
 
     const child = tracer.startSpan('Name', { childOf: rootSpan });
-    t.deepEqual(child.context().getTrace().findNode(child.getId()).getType(), 'Component');
+    t.deepEqual(child.context().getTrace().findNode(child.getId()).getType(), NODE_TYPE_COMPONENT);
     t.deepEqual(child.context().getTrace(), rootSpan.context().getTrace());
 
     const rootSpan2 = tracer.startSpan('Name2');
-    t.deepEqual(rootSpan2.context().getTrace().findNode(rootSpan2.getId()).getType(), 'Component');
+    t.deepEqual(rootSpan2.context().getTrace().findNode(rootSpan2.getId()).getType(), NODE_TYPE_COMPONENT);
     // t.deepEqual(child.context().getTrace(), rootSpan2.context().getTrace()); // does not hold
     t.end();
 });
@@ -116,7 +117,7 @@ test('test trace serialization, one span', (t) => {
         fragmentId: rootSpan.getId(),
         timestamp: rootSpan.getStartTime() * 1000,
         nodes: [{
-            type: 'Component',
+            type: NODE_TYPE_COMPONENT,
             uri: null,
             timestamp: rootSpan.getStartTime() * 1000,
             operation: rootSpan.getOperationName(),
@@ -153,13 +154,13 @@ test('test trace serialization, two spans', (t) => {
         fragmentId: rootSpan.getId(),
         timestamp: rootSpan.getStartTime() * 1000,
         nodes: [{
-            type: 'Component',
+            type: NODE_TYPE_COMPONENT,
             uri: null,
             timestamp: rootSpan.getStartTime() * 1000,
             operation: rootSpan.getOperationName(),
             duration: rootSpan.getDuration() * 1000,
             nodes: [{
-                type: 'Component',
+                type: NODE_TYPE_COMPONENT,
                 uri: null,
                 timestamp: childSpan1.getStartTime() * 1000,
                 operation: childSpan1.getOperationName(),
@@ -206,7 +207,7 @@ test('test trace serialization, three spans', (t) => {
         fragmentId: rootSpan.getId(),
         timestamp: rootSpan.getStartTime() * 1000,
         nodes: [{
-            type: 'Consumer',
+            type: NODE_TYPE_CONSUMER,
             endpointType: 'HTTP',
             uri: null,
             timestamp: rootSpan.getStartTime() * 1000,
@@ -214,7 +215,7 @@ test('test trace serialization, three spans', (t) => {
             duration: rootSpan.getDuration() * 1000,
             correlationIds: [{
                 value: 5,
-                scope: 'Interaction',
+                scope: CORR_ID_SCOPE_INTERACTION,
             }],
             properties: [{
                 name: 'foo',
@@ -222,7 +223,7 @@ test('test trace serialization, three spans', (t) => {
                 type: 'Text',
             }],
             nodes: [{
-                type: 'Component',
+                type: NODE_TYPE_COMPONENT,
                 componentType: 'TYPEFROMURL',
                 uri: null,
                 timestamp: childSpan1.getStartTime() * 1000,
@@ -234,7 +235,7 @@ test('test trace serialization, three spans', (t) => {
                     type: 'Text',
                 }]
             }, {
-                type: 'Producer',
+                type: NODE_TYPE_PRODUCER,
                 endpointType: 'HTTP',
                 uri: '/foo/bar',
                 timestamp: childSpan2.getStartTime() * 1000,
@@ -247,11 +248,455 @@ test('test trace serialization, three spans', (t) => {
                 }],
                 correlationIds: [{
                     value: carrier[CARRIER_CORRELATION_ID],
-                    scope: 'Interaction',
+                    scope: CORR_ID_SCOPE_INTERACTION,
                 }],
             }]
         }],
     }]);
+    t.end();
+});
+
+test('test followsFrom', (t) => {
+    const recorder = new ListRecorder();
+    const tracer = new APMTracer({ recorder: recorder });
+
+    const rootSpan = tracer.startSpan('root', {
+        tags: {
+            'http.url': 'http://localhost:8080/a/b',
+        }
+    });
+    const childSpan1 = tracer.startSpan('child1', { childOf: rootSpan });
+    const childSpan11 = tracer.startSpan('child11', { childOf: childSpan1 });
+    const childSpan2 = tracer.startSpan('child2', { childOf: rootSpan });
+    const childSpan22 = tracer.startSpan('child22', { childOf: childSpan2 });
+
+    childSpan11.finish();
+    childSpan1.finish();
+    childSpan22.finish();
+    childSpan2.finish();
+    rootSpan.finish();
+
+    const followsFromSpan = tracer.startSpan('follows', {
+        references: [
+            new Constants.Reference(Constants.REFERENCE_FOLLOWS_FROM, childSpan11),
+        ]});
+    followsFromSpan.finish();
+
+    t.deepEqual(recorder.getTraces().length, 2);
+    t.deepEquals(recorder.getTraces()[0], {
+        traceId: rootSpan.getTraceId(),
+        fragmentId: rootSpan.getId(),
+        timestamp: rootSpan.getStartTime() * 1000,
+        nodes: [{
+            type: NODE_TYPE_COMPONENT,
+            uri: '/a/b',
+            componentType: 'HTTP',
+            timestamp: rootSpan.getStartTime() * 1000,
+            operation: rootSpan.getOperationName(),
+            duration: rootSpan.getDuration() * 1000,
+            properties: [{
+                name: 'http.url',
+                value: 'http://localhost:8080/a/b',
+                type: 'Text',
+            }],
+            nodes: [{
+                type: NODE_TYPE_COMPONENT,
+                uri: null,
+                timestamp: childSpan1.getStartTime() * 1000,
+                operation: childSpan1.getOperationName(),
+                duration: childSpan1.getDuration() * 1000,
+                nodes: [{
+                    type: NODE_TYPE_COMPONENT,
+                    uri: null,
+                    timestamp: childSpan11.getStartTime() * 1000,
+                    operation: childSpan11.getOperationName(),
+                    duration: childSpan11.getDuration() * 1000,
+                }],
+            }, {
+                type: NODE_TYPE_COMPONENT,
+                uri: null,
+                timestamp: childSpan2.getStartTime() * 1000,
+                operation: childSpan2.getOperationName(),
+                duration: childSpan2.getDuration() * 1000,
+                nodes: [{
+                    type: NODE_TYPE_COMPONENT,
+                    uri: null,
+                    timestamp: childSpan22.getStartTime() * 1000,
+                    operation: childSpan22.getOperationName(),
+                    duration: childSpan22.getDuration() * 1000,
+                }],
+            }],
+        }],
+    });
+
+    t.deepEquals(recorder.getTraces()[1], {
+        traceId: rootSpan.getTraceId(),
+        fragmentId: followsFromSpan.getId(),
+        timestamp: followsFromSpan.getStartTime() * 1000,
+        nodes: [{
+            type: NODE_TYPE_CONSUMER,
+            endpointType: null,
+            uri: '/a/b',
+            timestamp: followsFromSpan.getStartTime() * 1000,
+            operation: rootSpan.getOperationName(),
+            duration: 0,
+            correlationIds: [{
+                value: `${rootSpan.getId()}:0:0:0`,
+                scope: CORR_ID_SCOPE_CAUSED_BY,
+            }],
+            nodes: [{
+                type: NODE_TYPE_COMPONENT,
+                uri: null,
+                operation: followsFromSpan.getOperationName(),
+                timestamp: followsFromSpan.getStartTime() * 1000,
+                duration: followsFromSpan.getDuration() * 1000,
+            }],
+        }],
+    });
+    t.end();
+});
+
+test('test followsFrom with additional span and inject', (t) => {
+    const recorder = new ListRecorder();
+    const tracer = new APMTracer({ recorder: recorder });
+
+    const rootSpan = tracer.startSpan('root');
+    const childSpan1 = tracer.startSpan('child1', { childOf: rootSpan });
+    const childSpan11 = tracer.startSpan('child11', { childOf: childSpan1 });
+    const childSpan2 = tracer.startSpan('child2', { childOf: rootSpan });
+    const childSpan22 = tracer.startSpan('child22', { childOf: childSpan2 });
+
+    childSpan11.finish();
+    childSpan1.finish();
+    childSpan22.finish();
+    childSpan2.finish();
+    rootSpan.finish();
+
+    const followsFromSpan = tracer.startSpan('follows', {
+        references: [
+            new Constants.Reference(Constants.REFERENCE_FOLLOWS_FROM, childSpan11),
+        ]});
+
+    const childOfFromFollwsFrom = tracer.startSpan('childOfFromFollowsFrom', {
+        references: [
+            new Constants.Reference(Constants.REFERENCE_CHILD_OF, followsFromSpan),
+        ]});
+
+    const carrier = {};
+    tracer.inject(childOfFromFollwsFrom.context(), Constants.FORMAT_TEXT_MAP, carrier);
+    followsFromSpan.finish();
+    childOfFromFollwsFrom.finish();
+
+    t.deepEqual(recorder.getTraces().length, 2);
+    t.deepEquals(recorder.getTraces()[0], {
+        traceId: rootSpan.getTraceId(),
+        fragmentId: rootSpan.getId(),
+        timestamp: rootSpan.getStartTime() * 1000,
+        nodes: [{
+            type: NODE_TYPE_COMPONENT,
+            uri: null,
+            timestamp: rootSpan.getStartTime() * 1000,
+            operation: rootSpan.getOperationName(),
+            duration: rootSpan.getDuration() * 1000,
+            nodes: [{
+                type: NODE_TYPE_COMPONENT,
+                uri: null,
+                timestamp: childSpan1.getStartTime() * 1000,
+                operation: childSpan1.getOperationName(),
+                duration: childSpan1.getDuration() * 1000,
+                nodes: [{
+                    type: NODE_TYPE_COMPONENT,
+                    uri: null,
+                    timestamp: childSpan11.getStartTime() * 1000,
+                    operation: childSpan11.getOperationName(),
+                    duration: childSpan11.getDuration() * 1000,
+                }],
+            }, {
+                type: NODE_TYPE_COMPONENT,
+                uri: null,
+                timestamp: childSpan2.getStartTime() * 1000,
+                operation: childSpan2.getOperationName(),
+                duration: childSpan2.getDuration() * 1000,
+                nodes: [{
+                    type: NODE_TYPE_COMPONENT,
+                    uri: null,
+                    timestamp: childSpan22.getStartTime() * 1000,
+                    operation: childSpan22.getOperationName(),
+                    duration: childSpan22.getDuration() * 1000,
+                }],
+            }],
+        }],
+    });
+
+    t.deepEquals(recorder.getTraces()[1], {
+        traceId: rootSpan.getTraceId(),
+        fragmentId: followsFromSpan.getId(),
+        timestamp: followsFromSpan.getStartTime() * 1000,
+        nodes: [{
+            type: NODE_TYPE_CONSUMER,
+            endpointType: null,
+            uri: null,
+            operation: rootSpan.getOperationName(),
+            timestamp: followsFromSpan.getStartTime() * 1000,
+            duration: 0,
+            correlationIds: [{
+                value: `${rootSpan.getId()}:0:0:0`,
+                scope: CORR_ID_SCOPE_CAUSED_BY,
+            }],
+            nodes: [{
+                type: NODE_TYPE_COMPONENT,
+                uri: null,
+                operation: followsFromSpan.getOperationName(),
+                timestamp: followsFromSpan.getStartTime() * 1000,
+                duration: followsFromSpan.getDuration() * 1000,
+                nodes: [{
+                    type: NODE_TYPE_PRODUCER,
+                    uri: null,
+                    endpointType: 'HTTP',
+                    operation: childOfFromFollwsFrom.getOperationName(),
+                    timestamp: childOfFromFollwsFrom.getStartTime() * 1000,
+                    duration: childOfFromFollwsFrom.getDuration() * 1000,
+                    correlationIds: [{
+                        value: carrier[CARRIER_CORRELATION_ID],
+                        scope: CORR_ID_SCOPE_INTERACTION,
+                    }],
+                }],
+            }],
+        }],
+    });
+    t.end();
+});
+
+test('test mixed references, primary parent childOf', (t) => {
+    const recorder = new ListRecorder();
+    const tracer = new APMTracer({ recorder: recorder });
+
+    const rootSpan = tracer.startSpan('root');
+    const childSpan1 = tracer.startSpan('child1', { childOf: rootSpan });
+    const childSpan11 = tracer.startSpan('child11', { childOf: childSpan1 });
+    const childSpan2 = tracer.startSpan('child2', { childOf: rootSpan });
+    const childSpan22 = tracer.startSpan('child22', { childOf: childSpan2 });
+
+    childSpan1.finish();
+    childSpan2.finish();
+    rootSpan.finish();
+    childSpan11.finish();
+
+    const multipleReferencesSpan = tracer.startSpan('follows', {
+        references: [
+            new Constants.Reference(Constants.REFERENCE_FOLLOWS_FROM, childSpan11),
+            new Constants.Reference(Constants.REFERENCE_CHILD_OF, childSpan22.context()),
+        ]});
+
+    childSpan22.finish();
+    multipleReferencesSpan.finish();
+
+    t.deepEqual(recorder.getTraces().length, 1);
+    t.deepEquals(recorder.getTraces()[0], {
+        traceId: rootSpan.getTraceId(),
+        fragmentId: rootSpan.getId(),
+        timestamp: rootSpan.getStartTime() * 1000,
+        nodes: [{
+            type: NODE_TYPE_COMPONENT,
+            uri: null,
+            timestamp: rootSpan.getStartTime() * 1000,
+            operation: rootSpan.getOperationName(),
+            duration: rootSpan.getDuration() * 1000,
+            nodes: [{
+                type: NODE_TYPE_COMPONENT,
+                uri: null,
+                timestamp: childSpan1.getStartTime() * 1000,
+                operation: childSpan1.getOperationName(),
+                duration: childSpan1.getDuration() * 1000,
+                nodes: [{
+                    type: NODE_TYPE_COMPONENT,
+                    uri: null,
+                    timestamp: childSpan11.getStartTime() * 1000,
+                    operation: childSpan11.getOperationName(),
+                    duration: childSpan11.getDuration() * 1000,
+                }],
+            }, {
+                type: NODE_TYPE_COMPONENT,
+                uri: null,
+                timestamp: childSpan2.getStartTime() * 1000,
+                operation: childSpan2.getOperationName(),
+                duration: childSpan2.getDuration() * 1000,
+                nodes: [{
+                    type: NODE_TYPE_COMPONENT,
+                    uri: null,
+                    timestamp: childSpan22.getStartTime() * 1000,
+                    operation: childSpan22.getOperationName(),
+                    duration: childSpan22.getDuration() * 1000,
+                    nodes:[{
+                        type: NODE_TYPE_COMPONENT,
+                        uri: null,
+                        timestamp: multipleReferencesSpan.getStartTime() * 1000,
+                        operation: multipleReferencesSpan.getOperationName(),
+                        duration: multipleReferencesSpan.getDuration() * 1000,
+                        correlationIds: [{
+                            value: `${rootSpan.getId()}:0:0:0`,
+                            scope: CORR_ID_SCOPE_CAUSED_BY
+                        }],
+                    }],
+                }],
+            }],
+        }],
+    });
+    t.end();
+});
+
+test('test mixed references, primary parent extracted empty context', (t) => {
+    const recorder = new ListRecorder();
+    const tracer = new APMTracer({ recorder: recorder });
+
+    const extractedContext = tracer.extract(Constants.FORMAT_TEXT_MAP, {});
+    const rootSpan = tracer.startSpan('root', { childOf: extractedContext});
+    const childSpan1 = tracer.startSpan('child1', { childOf: rootSpan });
+    const childSpan11 = tracer.startSpan('child11', { childOf: childSpan1 });
+    const childSpan2 = tracer.startSpan('child2', { childOf: rootSpan });
+    const childSpan22 = tracer.startSpan('child22', { childOf: childSpan2 });
+
+    childSpan1.finish();
+    childSpan11.finish();
+    childSpan2.finish();
+    rootSpan.finish();
+
+    const multipleReferencesSpan = tracer.startSpan('follows', {
+        references: [
+            new Constants.Reference(Constants.REFERENCE_FOLLOWS_FROM, extractedContext),
+            new Constants.Reference(Constants.REFERENCE_CHILD_OF, childSpan22.context()),
+        ]});
+
+    multipleReferencesSpan.finish();
+    childSpan22.finish();
+
+    t.deepEqual(recorder.getTraces().length, 2);
+    t.deepEquals(recorder.getTraces()[0], {
+        traceId: multipleReferencesSpan.getTraceId(),
+        fragmentId: multipleReferencesSpan.getId(),
+        timestamp: multipleReferencesSpan.getStartTime() * 1000,
+        nodes: [{
+            type: NODE_TYPE_CONSUMER,
+            endpointType: 'HTTP',
+            uri: null,
+            operation: multipleReferencesSpan.getOperationName(),
+            timestamp: multipleReferencesSpan.getStartTime() * 1000,
+            duration: multipleReferencesSpan.getDuration() * 1000,
+            correlationIds: [{
+                value: `${rootSpan.getId()}:0:1:0`,
+                scope: CORR_ID_SCOPE_CAUSED_BY,
+            }],
+        }],
+    });
+    t.end();
+});
+
+test('test mixed references, primary parent extracted valid context', (t) => {
+    const recorder = new ListRecorder();
+    const tracer = new APMTracer({ recorder: recorder });
+
+    const carrier = {};
+    carrier[CARRIER_CORRELATION_ID] = 'foobar';
+    carrier[CARRIER_TRACE_ID] = 'trace';
+
+    const extractedContext = tracer.extract(Constants.FORMAT_TEXT_MAP, carrier);
+    const rootSpan = tracer.startSpan('root', { childOf: extractedContext});
+    const childSpan1 = tracer.startSpan('child1', { childOf: rootSpan });
+    const childSpan11 = tracer.startSpan('child11', { childOf: childSpan1 });
+    const childSpan2 = tracer.startSpan('child2', { childOf: rootSpan });
+    const childSpan22 = tracer.startSpan('child22', { childOf: childSpan2 });
+
+    childSpan1.finish();
+    childSpan11.finish();
+    childSpan2.finish();
+    rootSpan.finish();
+
+    const multipleReferencesSpan = tracer.startSpan('follows', {
+        references: [
+            new Constants.Reference(Constants.REFERENCE_FOLLOWS_FROM, extractedContext),
+            new Constants.Reference(Constants.REFERENCE_CHILD_OF, childSpan22.context()),
+        ]});
+
+    multipleReferencesSpan.finish();
+    childSpan22.finish();
+
+    t.deepEqual(recorder.getTraces().length, 2);
+    t.deepEquals(recorder.getTraces()[0], {
+        traceId: multipleReferencesSpan.getTraceId(),
+        fragmentId: multipleReferencesSpan.getId(),
+        timestamp: multipleReferencesSpan.getStartTime() * 1000,
+        nodes: [{
+            type: NODE_TYPE_CONSUMER,
+            endpointType: 'HTTP',
+            uri: null,
+            operation: multipleReferencesSpan.getOperationName(),
+            timestamp: multipleReferencesSpan.getStartTime() * 1000,
+            duration: multipleReferencesSpan.getDuration() * 1000,
+            correlationIds: [{
+                value: carrier[CARRIER_CORRELATION_ID],
+                scope: CORR_ID_SCOPE_INTERACTION,
+            },{
+                value: `${rootSpan.getId()}:0:1:0`,
+                scope: CORR_ID_SCOPE_CAUSED_BY,
+            }],
+        }],
+    });
+    t.end();
+});
+
+test('test mixed references, join scenario', (t) => {
+    const recorder = new ListRecorder();
+    const tracer = new APMTracer({ recorder: recorder });
+
+    const extractedContext = tracer.extract(Constants.FORMAT_TEXT_MAP, {});
+    const rootSpan = tracer.startSpan('root', { childOf: extractedContext});
+    const childSpan1 = tracer.startSpan('child1', { childOf: rootSpan });
+    const childSpan11 = tracer.startSpan('child11', { childOf: childSpan1 });
+    const childSpan2 = tracer.startSpan('child2', { childOf: rootSpan });
+    const childSpan22 = tracer.startSpan('child22', { childOf: childSpan2 });
+
+    childSpan1.finish();
+    childSpan22.finish();
+    childSpan2.finish();
+    rootSpan.finish();
+    childSpan11.finish();
+
+    const multipleReferencesSpan = tracer.startSpan('follows', {
+        references: [
+            new Constants.Reference(Constants.REFERENCE_FOLLOWS_FROM, rootSpan),
+            new Constants.Reference(Constants.REFERENCE_FOLLOWS_FROM, childSpan22.context()),
+        ]});
+
+    multipleReferencesSpan.finish();
+
+    t.deepEqual(recorder.getTraces().length, 2);
+    t.deepEquals(recorder.getTraces()[1], {
+        traceId: rootSpan.getTraceId(),
+        fragmentId: multipleReferencesSpan.getId(),
+        timestamp: multipleReferencesSpan.getStartTime() * 1000,
+        nodes: [{
+            type: NODE_TYPE_CONSUMER,
+            endpointType: null,
+            uri: null,
+            operation: rootSpan.getOperationName(),
+            timestamp: multipleReferencesSpan.getStartTime() * 1000,
+            duration: 0,
+            correlationIds: [{
+                value: `${rootSpan.getId()}:0`,
+                scope: CORR_ID_SCOPE_CAUSED_BY,
+            }, {
+                value: `${rootSpan.getId()}:0:1:0`,
+                scope: CORR_ID_SCOPE_CAUSED_BY,
+            }],
+            nodes: [{
+                type: NODE_TYPE_COMPONENT,
+                uri: null,
+                operation: multipleReferencesSpan.getOperationName(),
+                timestamp: multipleReferencesSpan.getStartTime() * 1000,
+                duration: multipleReferencesSpan.getDuration() * 1000,
+            }],
+        }],
+    });
     t.end();
 });
 
@@ -263,9 +708,9 @@ test('test trace add and find node', (t) => {
     const childSpan1 = tracer.startSpan('child1', { childOf: rootSpan });
     const childSpan2 = tracer.startSpan('child2', { childOf: rootSpan });
 
-    trace.addNode('Component', rootSpan);
-    trace.addNode('Component', childSpan1);
-    trace.addNode('Component', childSpan2);
+    trace.addNode(NODE_TYPE_COMPONENT, rootSpan);
+    trace.addNode(NODE_TYPE_COMPONENT, childSpan1);
+    trace.addNode(NODE_TYPE_COMPONENT, childSpan2);
     t.deepEquals(trace.findNode(rootSpan.getId()).getSpan(), rootSpan);
     t.deepEquals(trace.findNode(childSpan1.getId()).getSpan(), childSpan1);
     t.deepEquals(trace.findNode(childSpan2.getId()).getSpan(), childSpan2);

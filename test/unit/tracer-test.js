@@ -75,7 +75,7 @@ test('test extract unknown format', (t) => {
 });
 
 test('test inject FORMAT_HTTP_HEADERS', (t) => {
-    const spanContext = new APMSpanContext(2, 1, null, null, 'foo', 'All');
+    const spanContext = new APMSpanContext(2, 1, null, 'foo', 'All');
     const carrier = {};
 
     new APMTracer().inject(spanContext, Constants.FORMAT_HTTP_HEADERS, carrier);
@@ -105,7 +105,18 @@ test('test extract inject', (t) => {
     t.deepEquals(injectCarrier[CARRIER_LEVEL], 'All');
 
     const childSpan = tracer.startSpan('child', { childOf: rootSpan });
+    injectCarrier = {};
     tracer.inject(childSpan.context(), Constants.FORMAT_HTTP_HEADERS, injectCarrier);
+    t.ok(injectCarrier[CARRIER_CORRELATION_ID]);
+    t.deepEquals(injectCarrier[CARRIER_TRACE_ID], '555');
+    t.deepEquals(injectCarrier[CARRIER_TRANSACTION], 'foo');
+    t.deepEquals(injectCarrier[CARRIER_LEVEL], 'All');
+
+    const childFollowsFrom = tracer.startSpan('followsFrom', {
+        references: [new Constants.Reference(Constants.REFERENCE_FOLLOWS_FROM, childSpan)]
+    });
+    injectCarrier = {};
+    tracer.inject(childFollowsFrom.context(), Constants.FORMAT_HTTP_HEADERS, injectCarrier);
     t.ok(injectCarrier[CARRIER_CORRELATION_ID]);
     t.deepEquals(injectCarrier[CARRIER_TRACE_ID], '555');
     t.deepEquals(injectCarrier[CARRIER_TRANSACTION], 'foo');
