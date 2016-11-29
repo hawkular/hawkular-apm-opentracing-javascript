@@ -17,7 +17,7 @@
 
 import apiCompatibilityChecks from 'opentracing/test/api_compatibility.js';
 
-import { APMTracer } from '../../lib/APMTracer';
+import { APMTracer } from '../../index';
 
 apiCompatibilityChecks(function() {
     return new APMTracer();
