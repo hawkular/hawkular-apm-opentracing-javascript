@@ -21,7 +21,7 @@ const hawkularAPM = require('hawkular-apm-opentracing');
 
 const tracer = new hawkularAPM.APMTracer({
     recorder: new hawkularAPM.ConsoleRecorder(),
-    sampler: new hawkularAPM.AlwaysSampledSampler()
+    sampler: new hawkularAPM.AlwaysSample(),
 });
 
 opentracing.initGlobalTracer(tracer);
