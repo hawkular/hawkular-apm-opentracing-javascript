@@ -16,7 +16,7 @@
  */
 
 import { APMTracer } from './lib/APMTracer';
-import { AlwaysSampledSampler } from './lib/sampler';
+import { AlwaysSample, NeverSample, PercentageSampler } from './lib/sampler';
 import { NoOpRecorder, ConsoleRecorder, HttpRecorder } from './lib/recorder';
 
 module.exports = {
@@ -24,5 +24,7 @@ module.exports = {
     NoOpRecorder,
     ConsoleRecorder,
     HttpRecorder,
-    AlwaysSampledSampler,
+    AlwaysSample,
+    NeverSample,
+    PercentageSampler,
 };

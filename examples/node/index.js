@@ -29,7 +29,7 @@ const SERVER_PORT = 9000;
 opentracing.initGlobalTracer(new hawkularAPM.APMTracer({
     recorder: new hawkularAPM.HttpRecorder('http://localhost:8080', 'jdoe', 'password'),
     // recorder: new hawkularAPM.ConsoleRecorder(),
-    sampler: new hawkularAPM.AlwaysSampledSampler(),
+    sampler: new hawkularAPM.AlwaysSample(),
 }));
 
 // /hello handler

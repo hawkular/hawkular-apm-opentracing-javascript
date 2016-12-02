@@ -19,8 +19,8 @@ import test from 'tape';
 import Constants from 'opentracing';
 import { Trace } from '../../lib/Trace'; // TODO remove
 import { NODE_TYPE_CONSUMER, NODE_TYPE_PRODUCER, NODE_TYPE_COMPONENT, CORR_ID_SCOPE_INTERACTION,
-    CORR_ID_SCOPE_CAUSED_BY  } from '../../lib/constants';
-import { APMTracer, CARRIER_CORRELATION_ID, CARRIER_TRACE_ID } from '../../lib/APMTracer';
+    CORR_ID_SCOPE_CAUSED_BY, CARRIER_CORRELATION_ID, CARRIER_TRACE_ID } from '../../lib/constants';
+import { APMTracer } from '../../index';
 
 test('test one span Component', (t) => {
     const tracer = new APMTracer();

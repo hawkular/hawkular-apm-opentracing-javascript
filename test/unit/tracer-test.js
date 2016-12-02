@@ -18,7 +18,8 @@
 import test from 'tape';
 import Constants from 'opentracing';
 
-import { APMTracer, CARRIER_TRACE_ID, CARRIER_CORRELATION_ID, CARRIER_TRANSACTION, CARRIER_LEVEL } from '../../lib/APMTracer';
+import { APMTracer } from '../../index';
+import { CARRIER_TRACE_ID, CARRIER_CORRELATION_ID, CARRIER_TRANSACTION, CARRIER_LEVEL } from '../../lib/constants'
 import { APMSpanContext } from '../../lib/APMSpanContext';
 
 test('test carrier constants', (t) => {
