@@ -20,13 +20,6 @@
     "url": "https://issues.jboss.org/projects/HWKAPM/issues"
   },
   "main": "dist/index.js",
-  "files": [
-    "package.json",
-    "README.md",
-    "LICENSE",
-    "dist",
-    "lib"
-  ],
   "scripts": {
     "lint": "eslint lib/*.js test/*.js index.js",
     "test": "babel-tape-runner test/unit/*-test.js | tap-spec && npm run test-api",
