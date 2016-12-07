@@ -18,6 +18,7 @@
 import { APMTracer } from './lib/APMTracer';
 import { AlwaysSample, NeverSample, PercentageSampler } from './lib/sampler';
 import { NoOpRecorder, ConsoleRecorder, HttpRecorder } from './lib/recorder';
+import { DeploymentMetaData, DEFAULT_META_DATA } from './lib/deployment-meta-data';
 
 module.exports = {
     APMTracer,
@@ -27,4 +28,6 @@ module.exports = {
     AlwaysSample,
     NeverSample,
     PercentageSampler,
+    DEFAULT_META_DATA,
+    DeploymentMetaData,
 };

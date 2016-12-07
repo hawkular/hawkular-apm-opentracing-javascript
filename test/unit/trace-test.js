@@ -21,6 +21,7 @@ import { Trace } from '../../lib/Trace'; // TODO remove
 import { NODE_TYPE_CONSUMER, NODE_TYPE_PRODUCER, NODE_TYPE_COMPONENT, CORR_ID_SCOPE_INTERACTION,
     CORR_ID_SCOPE_CAUSED_BY, CARRIER_CORRELATION_ID, CARRIER_TRACE_ID } from '../../lib/constants';
 import { APMTracer } from '../../index';
+import metaData from '../../lib/deployment-meta-data';
 
 test('test one span Component', (t) => {
     const tracer = new APMTracer();
@@ -719,6 +720,38 @@ test('test trace add and find node', (t) => {
     t.end();
 });
 
+test('test serviceName and buildStamp from env vars', (t) => {
+    process.env[metaData.OPENSHIFT_BUILD_NAMESPACE] = 'namespace';
+    process.env[metaData.OPENSHIFT_BUILD_NAME] = 'name-1';
+    process.env[metaData.HAWKULAR_APM_SERVICE_NAME] = 'foo';
+    metaData.DEFAULT_META_DATA.reload();
+
+    const recorder = new ListRecorder();
+    const tracer = new APMTracer({ recorder: recorder });
+
+    const rootSpan = tracer.startSpan('root');
+    const childSpan1 = tracer.startSpan('child1', { childOf: rootSpan });
+    const childSpan2 = tracer.startSpan('child2', { childOf: rootSpan });
+
+    childSpan2.finish();
+    childSpan1.finish();
+    rootSpan.finish();
+
+    console.log(JSON.stringify(recorder.getTraces()[0].nodes[0].properties))
+    t.deepEquals(recorder.getTraces()[0].nodes[0].properties, [{
+        name: "service",
+        value: "foo",
+        type: "Text",
+    }, {
+        name: "buildStamp",
+        value: "namespace.name-1",
+        type: "Text",
+    }]);
+
+    cleanEnvVariables();
+    t.end();
+});
+
 class ListRecorder {
     constructor() {
         this._traces = [];
@@ -732,3 +765,9 @@ class ListRecorder {
     }
 }
 
+function cleanEnvVariables() {
+    delete process.env[metaData.HAWKULAR_APM_SERVICE_NAME];
+    delete process.env[metaData.OPENSHIFT_BUILD_NAMESPACE];
+    delete process.env[metaData.OPENSHIFT_BUILD_NAME];
+    metaData.DEFAULT_META_DATA.reload();
+}

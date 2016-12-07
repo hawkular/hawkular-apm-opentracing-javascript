@@ -22,6 +22,7 @@ const hawkularAPM = require('hawkular-apm-opentracing');
 const tracer = new hawkularAPM.APMTracer({
     recorder: new hawkularAPM.ConsoleRecorder(),
     sampler: new hawkularAPM.AlwaysSample(),
+    deploymentMetaData: new hawkularAPM.DeploymentMetaData('serviceName'),
 });
 
 opentracing.initGlobalTracer(tracer);
